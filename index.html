@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="hr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kuhinjski Pomoćnik</title>
+    <style>
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        body { font-family: -apple-system, system-ui, sans-serif; background: #f0f2f5; margin: 0; display: flex; justify-content: center; padding: 15px; }
+        .app-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; min-height: 300px; }
+        
+        header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; position: relative; }
+        h1 { margin: 5px 0; color: #2c3e50; font-size: 22px; }
+        
+        .share-btn { position: absolute; top: 0; right: 0; background: #f8f9fa; border: 1px solid #ddd; padding: 8px; border-radius: 50%; cursor: pointer; }
+
+        .notif-banner { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; text-align: center; border: 1px solid #ffeeba; display: none; }
+
+        .food-item { background: #fff; border: 1px solid #eee; border-left: 6px solid #e67e22; padding: 15px; border-radius: 15px; margin-bottom: 15px; position: relative; }
+        .delete-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; cursor: pointer; font-size: 18px; color: #ddd; }
+
+        .food-header { font-weight: bold; font-size: 19px; margin-bottom: 12px; color: #2c3e50; }
+        .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
+        input[type="number"] { width: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 17px; }
+        .ml-result { color: #2980b9; font-weight: 800; }
+
+        .timer-row { display: flex; justify-content: space-between; align-items: center; }
+        .time-display { font-size: 28px; font-weight: bold; font-family: monospace; color: #2c3e50; }
+        
+        button { cursor: pointer; border: none; border-radius: 10px; font-weight: bold; transition: 0.2s; }
+        .btn-cook { background: #3498db; color: white; padding: 12px 24px; }
+        .btn-stop { background: #e74c3c; color: white; padding: 12px 24px; animation: blink 1s infinite; }
+
+        .add-section { margin-top: 30px; padding: 20px; border-radius: 15px; background: #fdfdfd; border: 2px dashed #eee; }
+        .add-section input { width: 100%; margin-bottom: 10px; padding: 12px; border: 1px solid #ddd; border-radius: 10px; }
+        .btn-add { width: 100%; padding: 15px; background: #27ae60; color: white; font-size: 16px; }
+
+        @keyframes blink { 50% { opacity: 0.4; } }
+        .finished { color: #e74c3c !important; animation: blink 0.8s infinite; }
+    </style>
+</head>
+<body>
+
+<div class="app-card">
+    <header>
+        <button class="share-btn" onclick="shareApp()">🔗</button>
+        <h1>🍳 Kuhinjski Pomoćnik</h1>
+    </header>
+    
+    <div id="notif-request" class="notif-banner">
+        ⚠️ Omogući obavijesti za alarm.<br>
+        <button onclick="requestNotif()" style="background:#856404; color:white; padding:5px 10px; margin-top:5px; border-radius:5px;">OMOGUĆI</button>
+    </div>
+
+    <div id="food-list"></div>
+
+    <div class="add-section">
+        <h3 style="margin-top:0">Dodaj novu namirnicu</h3>
+        <input type="text" id="newName" placeholder="Naziv">
+        <input type="number" id="newTime" placeholder="Minuta">
+        <input type="number" id="newWater" placeholder="ml vode">
+        <input type="number" id="newGrams" placeholder="za grama">
+        <button class="btn-add" onclick="addNewFood()">Dodaj na listu</button>
+    </div>
+</div>
+
+<script>
+    const defaultFoods = [
+        { name: "Riža", time: 25, water: 330, grams: 40 },
+        { name: "Griz", time: 4, water: 300, grams: 40 },
+        { name: "Palenta", time: 10, water: 300, grams: 40 }
+    ];
+
+    let foods = JSON.parse(localStorage.getItem('kuhinja_final_v1')) || defaultFoods;
+    let activeIntervals = {};
+    let alarmInterval = null;
+    let audioCtx = null;
+
+    function initAudio() {
+        if (!audioCtx) {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    async function shareApp() {
+        try {
+            await navigator.share({ title: 'Kuhinjski Pomoćnik', url: window.location.href });
+        } catch (err) {
+            alert('Link: ' + window.location.href);
+        }
+    }
+
+    function requestNotif() {
+        Notification.requestPermission().then(perm => {
+            if (perm === "granted") document.getElementById('notif-request').style.display = 'none';
+        });
+    }
+
+    if (Notification.permission !== "granted") {
+        document.getElementById('notif-request').style.display = 'block';
+    }
+
+    function render() {
+        const list = document.getElementById('food-list');
+        list.innerHTML = '';
+        foods.forEach((f, i) => {
+            list.innerHTML += `
+                <div class="food-item">
+                    <button class="delete-btn" onclick="deleteFood(${i})">🗑️</button>
+                    <div class="food-header">${f.name}</div>
+                    <div class="calc-row">
+                        <input type="number" value="${f.grams}" oninput="updateWater(${i}, this.value)">
+                        <span>g ➡️</span>
+                        <span class="ml-result" id="res-${i}">${f.water} ml</span>
+                    </div>
+                    <div class="timer-row">
+                        <div class="time-display" id="disp-${i}">${f.time}:00</div>
+                        <button class="btn-cook" id="btn-${i}" onclick="toggleTimer(${i})">KUHAJ</button>
+                    </div>
+                </div>`;
+            checkTimerOnLoad(i);
+        });
+    }
+
+    function checkTimerOnLoad(i) {
+        const endTime = localStorage.getItem(`timer_end_${i}`);
+        if (endTime) {
+            const remaining = Math.floor((parseInt(endTime) - Date.now()) / 1000);
+            if (remaining > -60) runTimer(i);
+        }
+    }
+
+    function toggleTimer(i) {
+        initAudio();
+        if (activeIntervals[i]) {
+            stopTimer(i);
+        } else {
+            const seconds = foods[i].time * 60;
+            const endTime = Date.now() + (seconds * 1000);
+            localStorage.setItem(`timer_end_${i}`, endTime);
+            runTimer(i);
+        }
+    }
+
+    function runTimer(i) {
+        const btn = document.getElementById(`btn-${i}`);
+        const disp = document.getElementById(`disp-${i}`);
+        if(btn) { btn.innerText = "STOP"; btn.className = "btn-stop"; }
+
+        activeIntervals[i] = setInterval(() => {
+            const endTime = localStorage.getItem(`timer_end_${i}`);
+            const remaining = Math.floor((parseInt(endTime) - Date.now()) / 1000);
+
+            if (remaining <= 0) {
+                if(disp) { disp.innerText = "GOTOVO!"; disp.classList.add('finished'); }
+                if (remaining === 0) {
+                    if (Notification.permission === "granted") new Notification("Gotovo: " + foods[i].name);
+                    if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
+                }
+                startAlarm();
+            } else if(disp) {
+                let m = Math.floor(remaining / 60);
+                let s = remaining % 60;
+                disp.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+            }
+        }, 1000);
+    }
+
+    function startAlarm() {
+        if(alarmInterval || !audioCtx) return;
+        alarmInterval = setInterval(() => {
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.type = 'square';
+            osc.frequency.value = 880;
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }, 1000);
+    }
+
+    function stopAlarm() { clearInterval(alarmInterval); alarmInterval = null; }
+
+    function stopTimer(i) {
+        clearInterval(activeIntervals[i]);
+        delete activeIntervals[i];
+        localStorage.removeItem(`timer_end_${i}`);
+        if (Object.keys(activeIntervals).length === 0) stopAlarm();
+        render();
+    }
+
+    function updateWater(index, val) {
+        const f = foods[index];
+        const res = val > 0 ? Math.round((val / f.grams) * f.water) : 0;
+        document.getElementById(`res-${index}`).innerText = res + " ml";
+    }
+
+    function deleteFood(index) {
+        if(confirm(`Obriši ${foods[index].name}?`)) {
+            stopTimer(index);
+            foods.splice(index, 1);
+            localStorage.setItem('kuhinja_final_v1', JSON.stringify(foods));
+            render();
+        }
+    }
+
+    function addNewFood() {
+        const n = document.getElementById('newName').value;
+        const t = document.getElementById('newTime').value;
+        const w = document.getElementById('newWater').value;
+        const g = document.getElementById('newGrams').value;
+        if(n && t && w && g) {
+            foods.push({ name: n, time: parseInt(t), water: parseInt(w), grams: parseInt(g) });
+            localStorage.setItem('kuhinja_final_v1', JSON.stringify(foods));
+            render();
+            document.getElementById('newName').value = '';
+        }
+    }
+
+    render();
+</script>
+</body>
+</html>
