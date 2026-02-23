@@ -5,12 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monikina Kuhinja</title>
     
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Kuhinja","display":"standalone","orientation":"portrait","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1041/1041337.png","sizes":"512x512","type":"image/png"}]}'>
-
     <style>
+        /* OSNOVNI STIL - SPRJEČAVA RAZVLAČENJE */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        
-        /* CSS LOCK: Ako se ekran okrene, sadržaj ostaje u portretnom obliku */
         body { 
             font-family: -apple-system, sans-serif; 
             background: #f0f2f5; 
@@ -18,7 +15,6 @@
             padding: 10px; 
             display: flex; 
             justify-content: center; 
-            overflow-x: hidden;
         }
 
         .app-card { 
@@ -27,36 +23,45 @@
             border-radius: 20px; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
             width: 100%; 
-            max-width: 400px; /* Ovo drži aplikaciju uskom čak i vodoravno */
-            min-height: 90vh;
+            max-width: 400px; /* Drži aplikaciju uskom */
         }
 
         header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
-        h1 { margin: 5px 0; color: #2c3e50; font-size: 22px; }
+        h1 { margin: 5px 0; color: #2c3e50; font-size: 20px; }
 
-        .food-item { background: #fff; border: 1px solid #eee; border-left: 6px solid #e67e22; padding: 12px; border-radius: 15px; margin-bottom: 12px; position: relative; }
+        /* KARTICE NAMIRNICA */
+        .food-item { 
+            background: #fff; 
+            border: 1px solid #eee; 
+            border-left: 6px solid #e67e22; 
+            padding: 12px; 
+            border-radius: 15px; 
+            margin-bottom: 12px; 
+            position: relative; 
+        }
         .delete-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; color: #ddd; cursor: pointer; }
         .food-header { font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #2c3e50; }
 
+        /* KALKULATOR DIO */
         .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
-        input[type="number"] { width: 75px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 17px; }
-        .ml-result { color: #2980b9; font-weight: 800; font-size: 17px; white-space: nowrap; }
+        input[type="number"] { width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
+        .ml-result { color: #2980b9; font-weight: 800; font-size: 16px; }
 
+        /* TAJMER DIO */
         .timer-row { display: flex; justify-content: space-between; align-items: center; }
-        .time-display { font-size: 26px; font-weight: bold; font-family: monospace; color: #2c3e50; }
-
+        .time-display { font-size: 24px; font-weight: bold; font-family: monospace; color: #2c3e50; }
         button { cursor: pointer; border: none; border-radius: 10px; font-weight: bold; transition: 0.2s; }
-        .btn-cook { background: #3498db; color: white; padding: 10px 20px; }
-        .btn-stop { background: #e74c3c; color: white; padding: 10px 20px; }
+        .btn-cook { background: #3498db; color: white; padding: 10px 18px; }
+        .btn-stop { background: #e74c3c; color: white; padding: 10px 18px; }
 
-        .add-section { margin-top: 25px; padding: 15px; border-radius: 15px; background: #fdfdfd; border: 2px dashed #eee; }
-        .add-section input { width: 100%; margin-bottom: 10px; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; }
-        .btn-add { width: 100%; padding: 15px; background: #27ae60; color: white; font-size: 16px; }
-
-        #history-section { margin-top: 25px; border-top: 2px solid #eee; padding-top: 15px; }
-        #history-list { max-height: 180px; overflow-y: auto; font-size: 13px; background: #fafafa; padding: 5px; border-radius: 10px; }
-        .history-item { padding: 8px; border-bottom: 1px solid #eee; color: #555; }
-
+        /* POVIJEST I DODAVANJE */
+        .add-section { margin-top: 20px; padding: 15px; border-radius: 15px; background: #fafafa; border: 1px dashed #ccc; }
+        .add-section input { width: 100%; margin-bottom: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
+        .btn-add { width: 100%; padding: 12px; background: #27ae60; color: white; }
+        
+        #history-list { max-height: 150px; overflow-y: auto; font-size: 13px; margin-top: 10px; background: #f9f9f9; padding: 5px; border-radius: 8px; }
+        .history-item { padding: 6px; border-bottom: 1px solid #eee; color: #555; }
+        
         @keyframes blink { 50% { opacity: 0.3; } }
         .finished { color: #e74c3c !important; animation: blink 0.8s infinite; }
     </style>
@@ -65,7 +70,9 @@
 
 <div class="app-card">
     <header><h1>🍳 Monikina Kuhinja</h1></header>
+    
     <div id="food-list"></div>
+
     <div class="add-section">
         <h4 style="margin:0 0 10px 0">➕ Dodaj namirnicu</h4>
         <input type="text" id="newName" placeholder="Naziv">
@@ -74,38 +81,42 @@
         <input type="number" id="newGrams" placeholder="grama">
         <button class="btn-add" onclick="addNewFood()">SPREMI</button>
     </div>
-    <div id="history-section">
-        <h4 style="margin:0 0 10px 0">📜 Povijest kuhanja</h4>
+    
+    <div style="margin-top:20px; border-top: 2px solid #eee; padding-top:10px;">
+        <h4 style="margin:0">📜 Povijest kuhanja</h4>
         <div id="history-list"></div>
-        <button onclick="clearHistory()" style="margin-top: 10px; background: none; color: #e74c3c; font-size: 12px; border: 1px solid #e74c3c; padding: 5px; width: 100%;">Obriši povijest</button>
+        <button onclick="clearHistory()" style="margin-top:8px; background:none; color:#e74c3c; font-size:11px; border:1px solid #e74c3c; width:100%; padding:5px;">Obriši povijest</button>
     </div>
 </div>
 
 <script>
-    let history = JSON.parse(localStorage.getItem('kuhinja_history')) || [];
+    // --- PODACI ---
+    let history = JSON.parse(localStorage.getItem('monika_history')) || [];
     const defaultFoods = [
-        { name: "Riža (Carnaroli)", time: 25, water: 280, grams: 35 },
+        { name: "Riža", time: 25, water: 280, grams: 35 },
         { name: "Griz", time: 4, water: 300, grams: 40 },
         { name: "Palenta", time: 10, water: 300, grams: 40 }
     ];
-    let foods = JSON.parse(localStorage.getItem('kuhinja_final')) || defaultFoods;
+    let foods = JSON.parse(localStorage.getItem('monika_foods')) || defaultFoods;
     let activeIntervals = {};
-    let alarmInterval = null;
     let audioCtx = null;
 
+    // --- FUNKCIJE ---
     function render() {
         const list = document.getElementById('food-list');
         list.innerHTML = '';
         foods.forEach((f, i) => {
-            const initialWater = f.name.includes("Riža") ? Math.round((f.grams * 2.5) + 192) : f.water;
+            // Pametna formula za rižu ostaje: (grami * 2.5) + 192
+            const startMl = f.name.includes("Riža") ? Math.round((f.grams * 2.5) + 192) : f.water;
+            
             list.innerHTML += `
                 <div class="food-item">
                     <button class="delete-btn" onclick="deleteFood(${i})">🗑️</button>
                     <div class="food-header">${f.name}</div>
                     <div class="calc-row">
-                        <input type="number" id="input-${i}" value="${f.grams}" oninput="updateWater(${i}, this.value)">
+                        <input type="number" id="in-${i}" value="${f.grams}" oninput="updateWater(${i}, this.value)">
                         <span>g ➡️</span>
-                        <span class="ml-result" id="res-${i}">${initialWater} ml</span>
+                        <span class="ml-result" id="res-${i}">${startMl} ml</span>
                     </div>
                     <div class="timer-row">
                         <div class="time-display" id="disp-${i}">${f.time}:00</div>
@@ -115,36 +126,43 @@
         });
     }
 
-    function updateWater(index, val) {
-        const f = foods[index];
-        let res = f.name.includes("Riža") ? (val > 0 ? Math.round((val * 2.5) + 192) : 0) : (val > 0 ? Math.round((val / f.grams) * f.water) : 0);
-        document.getElementById(`res-${index}`).innerText = res + " ml";
+    function updateWater(i, val) {
+        const f = foods[i];
+        let res = f.name.includes("Riža") 
+            ? (val > 0 ? Math.round((val * 2.5) + 192) : 0)
+            : (val > 0 ? Math.round((val / f.grams) * f.water) : 0);
+        document.getElementById(`res-${i}`).innerText = res + " ml";
     }
 
     function toggleTimer(i) {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (activeIntervals[i]) { 
-            clearInterval(activeIntervals[i]); 
+        const btn = document.getElementById(`btn-${i}`);
+        
+        if (activeIntervals[i]) {
+            clearInterval(activeIntervals[i]);
             delete activeIntervals[i];
-            render(); 
+            render();
         } else {
             let seconds = foods[i].time * 60;
-            let historySaved = false;
-            document.getElementById(`btn-${i}`).innerText = "STOP";
-            document.getElementById(`btn-${i}`).classList.add('btn-stop');
+            let saved = false;
+            btn.innerText = "STOP";
+            btn.classList.add('btn-stop');
+
             activeIntervals[i] = setInterval(() => {
                 seconds--;
                 if (seconds <= 0) {
                     const d = document.getElementById(`disp-${i}`);
-                    if(d) { d.innerText = "GOTOVO!"; d.classList.add('finished'); }
-                    if (!historySaved) {
-                        saveToHistory(foods[i].name, document.getElementById(`input-${i}`).value, document.getElementById(`res-${i}`).innerText);
-                        historySaved = true;
+                    d.innerText = "GOTOVO!";
+                    d.classList.add('finished');
+                    if (!saved) {
+                        saveToHistory(foods[i].name, document.getElementById(`in-${i}`).value, document.getElementById(`res-${i}`).innerText);
+                        saved = true;
+                        playAlarm();
                     }
-                    startAlarm();
                 } else {
-                    let min = Math.floor(seconds / 60); let sec = seconds % 60;
-                    if(document.getElementById(`disp-${i}`)) document.getElementById(`disp-${i}`).innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+                    let m = Math.floor(seconds / 60);
+                    let s = seconds % 60;
+                    document.getElementById(`disp-${i}`).innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
                 }
             }, 1000);
         }
@@ -152,214 +170,26 @@
 
     function saveToHistory(name, g, ml) {
         const now = new Date();
-        const entry = `${now.toLocaleDateString('hr')} ${now.getHours()}:${(now.getMinutes()<10?'0':'')+now.getMinutes()} - ${name}: ${g}g / ${ml}`;
-        history.unshift(entry); if(history.length > 15) history.pop();
-        localStorage.setItem('kuhinja_history', JSON.stringify(history));
-        renderHistory();
-    }
-
-    function renderHistory() {
-        document.getElementById('history-list').innerHTML = history.length > 0 ? history.map(h => `<div class="history-item">${h}</div>`).join('') : '<div style="padding:10px; color:#999; text-align:center;">Nema zapisa.</div>';
-    }
-
-    function startAlarm() {
-        if(alarmInterval || !audioCtx) return;
-        alarmInterval = setInterval(() => {
-            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
-            osc.type = 'square'; osc.frequency.value = 880;
-            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-        }, 1000);
-    }
-
-    function addNewFood() {
-        const n = document.getElementById('newName').value, t = document.getElementById('newTime').value, w = document.getElementById('newWater').value, g = document.getElementById('newGrams').value;
-        if(n && t && w && g) {
-            foods.push({ name: n, time: parseInt(t), water: parseInt(w), grams: parseInt(g) });
-            localStorage.setItem('kuhinja_final', JSON.stringify(foods)); render();
-            document.getElementById('newName').value = '';
-        }
-    }
-
-    function deleteFood(i) { if(confirm("Obriši?")) { foods.splice(i, 1); localStorage.setItem('kuhinja_final', JSON.stringify(foods)); render(); } }
-    function clearHistory() { if(confirm("Obriši povijest?")) { history = []; localStorage.removeItem('kuhinja_history'); renderHistory(); } }
-
-    render(); renderHistory();
-</script>
-</body>
-</html>
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
-    async function shareApp() {
-        try { await navigator.share({ title: 'Monikina Kuhinja', url: window.location.href }); } 
-        catch (err) { alert('URL kopiran!'); }
-    }
-
-    function requestNotif() {
-        Notification.requestPermission().then(perm => {
-            if (perm === "granted") document.getElementById('notif-request').style.display = 'none';
-        });
-    }
-
-    if (Notification.permission !== "granted") document.getElementById('notif-request').style.display = 'block';
-
-    // --- POVIJEST ---
-    function addToHistory(foodName, grams, ml) {
-        const now = new Date();
-        const dateStr = now.toLocaleDateString('hr-HR');
-        const timeStr = now.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
-        
-        const entry = {
-            text: `${dateStr} u ${timeStr} - ${foodName}: ${grams}g / ${ml}ml`,
-            id: Date.now()
-        };
-        
+        const entry = `${now.getHours()}:${(now.getMinutes()<10?'0':'')+now.getMinutes()} - ${name}: ${g}g (${ml})`;
         history.unshift(entry);
-        if (history.length > 20) history.pop();
-        
-        localStorage.setItem('kuhinja_history', JSON.stringify(history));
+        if(history.length > 10) history.pop();
+        localStorage.setItem('monika_history', JSON.stringify(history));
         renderHistory();
     }
 
     function renderHistory() {
-        const histList = document.getElementById('history-list');
-        histList.innerHTML = history.length > 0 
-            ? history.map(h => `<div class="history-item">${h.text}</div>`).join('')
-            : '<div style="color:#aaa; text-align:center; padding:10px;">Nema zapisa.</div>';
+        document.getElementById('history-list').innerHTML = history.map(h => `<div class="history-item">${h}</div>`).join('');
     }
 
-    function clearHistory() {
-        if(confirm("Obrisati svu povijest?")) {
-            history = [];
-            localStorage.removeItem('kuhinja_history');
-            renderHistory();
-        }
-    }
-
-    // --- LOGIKA KUHANJA ---
-    function render() {
-        const list = document.getElementById('food-list');
-        list.innerHTML = '';
-        foods.forEach((f, i) => {
-            list.innerHTML += `
-                <div class="food-item">
-                    <button class="delete-btn" onclick="deleteFood(${i})">🗑️</button>
-                    <div class="food-header">${f.name}</div>
-                    <div class="calc-row">
-                        <input type="number" id="input-${i}" value="${f.grams}" oninput="updateWater(${i}, this.value)">
-                        <span>g ➡️</span>
-                        <span class="ml-result" id="res-${i}">${calculateWaterDisplay(f, f.grams)} ml</span>
-                    </div>
-                    <div class="timer-row">
-                        <div class="time-display" id="disp-${i}">${f.time}:00</div>
-                        <button class="btn-cook" id="btn-${i}" onclick="toggleTimer(${i})">KUHAJ</button>
-                    </div>
-                </div>`;
-            checkTimerOnLoad(i);
-        });
-    }
-
-    function calculateWaterDisplay(f, val) {
-        if (f.name.includes("Riža")) {
-            return val > 0 ? Math.round((val * 2.5) + 192) : 0;
-        }
-        return val > 0 ? Math.round((val / f.grams) * f.water) : 0;
-    }
-
-    function updateWater(index, val) {
-        const f = foods[index];
-        const res = calculateWaterDisplay(f, val);
-        document.getElementById(`res-${index}`).innerText = res + " ml";
-    }
-
-    function toggleTimer(i) {
-        initAudio();
-        if (activeIntervals[i]) { stopTimer(i); } 
-        else {
-            const seconds = foods[i].time * 60;
-            const endTime = Date.now() + (seconds * 1000);
-            localStorage.setItem(`timer_end_${i}`, endTime);
-            runTimer(i);
-        }
-    }
-
-    function runTimer(i) {
-        const btn = document.getElementById(`btn-${i}`);
-        const disp = document.getElementById(`disp-${i}`);
-        if(btn) { btn.innerText = "STOP"; btn.classList.add('btn-stop'); }
-
-        let historySaved = false;
-
-        activeIntervals[i] = setInterval(() => {
-            const endTime = localStorage.getItem(`timer_end_${i}`);
-            if(!endTime) return;
-            
-            const remaining = Math.floor((parseInt(endTime) - Date.now()) / 1000);
-
-            if (remaining <= 0) {
-                if(disp) { disp.innerText = "GOTOVO!"; disp.classList.add('finished'); }
-                
-                if (!historySaved) {
-                    const gramsVal = document.getElementById(`input-${i}`).value;
-                    const mlVal = document.getElementById(`res-${i}`).innerText;
-                    addToHistory(foods[i].name, gramsVal, mlVal.replace(' ml', ''));
-                    
-                    if (Notification.permission === "granted") new Notification("Gotovo: " + foods[i].name);
-                    if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-                    historySaved = true;
-                }
-                startAlarm();
-            } else if(disp) {
-                let m = Math.floor(remaining / 60);
-                let s = remaining % 60;
-                disp.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-            }
-        }, 1000);
-    }
-
-    function checkTimerOnLoad(i) {
-        const endTime = localStorage.getItem(`timer_end_${i}`);
-        if (endTime) {
-            const remaining = Math.floor((parseInt(endTime) - Date.now()) / 1000);
-            if (remaining > -60) runTimer(i);
-        }
-    }
-
-    function startAlarm() {
-        if(alarmInterval || !audioCtx) return;
-        alarmInterval = setInterval(() => {
-            const osc = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            osc.type = 'square'; osc.frequency.value = 880;
-            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-        }, 1000);
-    }
-
-    function stopAlarm() { clearInterval(alarmInterval); alarmInterval = null; }
-
-    function stopTimer(i) {
-        clearInterval(activeIntervals[i]);
-        delete activeIntervals[i];
-        localStorage.removeItem(`timer_end_${i}`);
-        if (Object.keys(activeIntervals).length === 0) stopAlarm();
-        render();
-    }
-
-    function deleteFood(index) {
-        if(confirm(`Obriši ${foods[index].name}?`)) {
-            stopTimer(index);
-            foods.splice(index, 1);
-            localStorage.setItem('kuhinja_final', JSON.stringify(foods));
-            render();
-        }
+    function playAlarm() {
+        if(!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = 'square'; osc.frequency.value = 880;
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + 1);
     }
 
     function addNewFood() {
@@ -369,254 +199,25 @@
         const g = document.getElementById('newGrams').value;
         if(n && t && w && g) {
             foods.push({ name: n, time: parseInt(t), water: parseInt(w), grams: parseInt(g) });
-            localStorage.setItem('kuhinja_final', JSON.stringify(foods));
-            render();
-            document.getElementById('newName').value = '';
-            document.getElementById('newTime').value = '';
-            document.getElementById('newWater').value = '';
-            document.getElementById('newGrams').value = '';
-        }
-    }
-
-    render();
-    renderHistory();
-</script>
-</body>
-</html>
-        .btn-add { width: 100%; padding: 15px; background: #27ae60; color: white; font-size: 16px; }
-        @keyframes blink { 50% { opacity: 0.3; } }
-        .finished { color: #e74c3c !important; animation: blink 0.8s infinite; }
-    </style>
-</head>
-<body>
-
-<div class="app-card">
-    <header>
-        <button class="share-btn" onclick="shareApp()">🔗</button>
-        <h1>🍳 Monikina Kuhinja</h1>
-    </header>
-    <div id="notif-request" class="notif-banner">
-        🔔 Omogući obavijesti za alarm.<br>
-        <button onclick="requestNotif()" style="background:#856404; color:white; padding:6px 12px; margin-top:8px; border-radius:5px;">OMOGUĆI</button>
-    </div>
-    <div id="food-list"></div>
-    <div class="add-section">
-        <h3 style="margin-top:0">➕ Dodaj namirnicu</h3>
-        <input type="text" id="newName" placeholder="Naziv">
-        <input type="number" id="newTime" placeholder="Minuta">
-        <input type="number" id="newWater" placeholder="ml vode">
-        <input type="number" id="newGrams" placeholder="grama">
-        <button class="btn-add" onclick="addNewFood()">SPREMI</button>
-    </div>
-    
-    <div id="history-section" style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 15px;">
-    <h3 style="color: #2c3e50;">📜 Povijest kuhanja</h3>
-    <div id="history-list" style="max-height: 200px; overflow-y: auto; font-size: 14px;"></div>
-    <button onclick="clearHistory()" style="margin-top: 10px; background: none; color: #e74c3c; font-size: 12px; border: 1px solid #e74c3c; padding: 5px 10px;">Obriši povijest</button>
-    </div>
-    
-</div>
-
-<script>
-    // Na početku skripte, dohvati povijest iz memorije
-let history = JSON.parse(localStorage.getItem('kuhinja_history')) || [];
-
-// Funkcija za dodavanje u povijest (pozvat ćemo je kad tajmer dođe na 0)
-function addToHistory(foodName, grams) {
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('hr-HR');
-    const timeStr = now.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
-    
-    const entry = {
-        text: `${dateStr} u ${timeStr} - ${foodName} (${grams}g)`,
-        id: Date.now()
-    };
-    
-    history.unshift(entry); // Dodaj na početak liste
-    if (history.length > 20) history.pop(); // Čuvaj zadnjih 20 zapisa
-    
-    localStorage.setItem('kuhinja_history', JSON.stringify(history));
-    renderHistory();
-}
-
-function renderHistory() {
-    const histList = document.getElementById('history-list');
-    histList.innerHTML = history.map(h => `
-        <div style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; color: #555;">
-            ${h.text}
-        </div>
-    `).join('');
-}
-
-function clearHistory() {
-    if(confirm("Obrisati svu povijest?")) {
-        history = [];
-        localStorage.removeItem('kuhinja_history');
-        renderHistory();
-    }
-}
-
-// VAŽNO: Ažuriraj svoju postojeću runTimer funkciju unutar setInterval-a:
-// Tamo gdje piše: if (remaining === 0) { ... }
-// Dodaj ovu liniju: 
-// addToHistory(foods[i].name, document.querySelector(`#res-${i}`).previousElementSibling.previousElementSibling.value);
-    
-
-    
-    const defaultFoods = [
-        { name: "Riža", time: 25, water: 330, grams: 40 },
-        { name: "Griz", time: 4, water: 300, grams: 40 },
-        { name: "Palenta", time: 10, water: 300, grams: 40 }
-    ];
-
-    let foods = JSON.parse(localStorage.getItem('kuhinja_final')) || defaultFoods;
-    let activeIntervals = {};
-    let alarmInterval = null;
-    let audioCtx = null;
-
-    function initAudio() {
-        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-    }
-
-    async function shareApp() {
-        try { await navigator.share({ title: 'Kuhinja', url: window.location.href }); } 
-        catch (err) { alert('URL kopiran!'); }
-    }
-
-    function requestNotif() {
-        Notification.requestPermission().then(perm => {
-            if (perm === "granted") document.getElementById('notif-request').style.display = 'none';
-        });
-    }
-
-    if (Notification.permission !== "granted") document.getElementById('notif-request').style.display = 'block';
-
-    function render() {
-        const list = document.getElementById('food-list');
-        list.innerHTML = '';
-        foods.forEach((f, i) => {
-            list.innerHTML += `
-                <div class="food-item">
-                    <button class="delete-btn" onclick="deleteFood(${i})">🗑️</button>
-                    <div class="food-header">${f.name}</div>
-                    <div class="calc-row">
-                        <input type="number" value="${f.grams}" oninput="updateWater(${i}, this.value)">
-                        <span>g ➡️</span>
-                        <span class="ml-result" id="res-${i}">${f.water} ml</span>
-                    </div>
-                    <div class="timer-row">
-                        <div class="time-display" id="disp-${i}">${f.time}:00</div>
-                        <button class="btn-cook" id="btn-${i}" onclick="toggleTimer(${i})">KUHAJ</button>
-                    </div>
-                </div>`;
-            checkTimerOnLoad(i);
-        });
-    }
-
-    function checkTimerOnLoad(i) {
-        const endTime = localStorage.getItem(`timer_end_${i}`);
-        if (endTime) {
-            const remaining = Math.floor((parseInt(endTime) - Date.now()) / 1000);
-            if (remaining > -60) runTimer(i);
-        }
-    }
-
-    function toggleTimer(i) {
-        initAudio();
-        if (activeIntervals[i]) { stopTimer(i); } 
-        else {
-            const seconds = foods[i].time * 60;
-            const endTime = Date.now() + (seconds * 1000);
-            localStorage.setItem(`timer_end_${i}`, endTime);
-            runTimer(i);
-        }
-    }
-
-    function runTimer(i) {
-        const btn = document.getElementById(`btn-${i}`);
-        const disp = document.getElementById(`disp-${i}`);
-        if(btn) { btn.innerText = "STOP"; btn.classList.add('btn-stop'); }
-
-        activeIntervals[i] = setInterval(() => {
-            const endTime = localStorage.getItem(`timer_end_${i}`);
-            const remaining = Math.floor((parseInt(endTime) - Date.now()) / 1000);
-
-            if (remaining <= 0) {
-                if(disp) { disp.innerText = "GOTOVO!"; disp.classList.add('finished'); }
-                if (remaining === 0) {
-                    if (Notification.permission === "granted") new Notification("Gotovo: " + foods[i].name);
-                    if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
-                }
-                addToHistory(foods[i].name, document.querySelector(`#res-${i}`).previousElementSibling.previousElementSibling.value);
-                startAlarm();
-            } else if(disp) {
-                let m = Math.floor(remaining / 60);
-                let s = remaining % 60;
-                disp.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-            }
-        }, 1000);
-    }
-
-    function startAlarm() {
-        if(alarmInterval || !audioCtx) return;
-        alarmInterval = setInterval(() => {
-            const osc = audioCtx.createOscillator();
-            const g = audioCtx.createGain();
-            osc.type = 'square'; osc.frequency.value = 880;
-            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
-            osc.connect(g); g.connect(audioCtx.destination);
-            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
-        }, 1000);
-    }
-
-    function stopAlarm() { clearInterval(alarmInterval); alarmInterval = null; }
-
-    function stopTimer(i) {
-        clearInterval(activeIntervals[i]);
-        delete activeIntervals[i];
-        localStorage.removeItem(`timer_end_${i}`);
-        if (Object.keys(activeIntervals).length === 0) stopAlarm();
-        render();
-    }
-
-function updateWater(index, val) {
-    const f = foods[index];
-    if (f.name.includes("Riža")) {
-        // 2.5ml po gramu + fiksno isparavanje koje smo izračunali za tvoj lonac (~192ml)
-        const res = Math.round((val * 2.5) + 192);
-        document.getElementById(`res-${index}`).innerText = res + " ml";
-    } else {
-        // Za ostale namirnice ostavi staro
-        const res = val > 0 ? Math.round((val / f.grams) * f.water) : 0;
-        document.getElementById(`res-${index}`).innerText = res + " ml";
-    }
-}
-    
-    function deleteFood(index) {
-        if(confirm(`Obriši ${foods[index].name}?`)) {
-            stopTimer(index);
-            foods.splice(index, 1);
-            localStorage.setItem('kuhinja_final', JSON.stringify(foods));
-            render();
-        }
-    }
-
-    function addNewFood() {
-        const n = document.getElementById('newName').value;
-        const t = document.getElementById('newTime').value;
-        const w = document.getElementById('newWater').value;
-        const g = document.getElementById('newGrams').value;
-        if(n && t && w && g) {
-            foods.push({ name: n, time: parseInt(t), water: parseInt(w), grams: parseInt(g) });
-            localStorage.setItem('kuhinja_final', JSON.stringify(foods));
+            localStorage.setItem('monika_foods', JSON.stringify(foods));
             render();
             document.getElementById('newName').value = '';
         }
     }
 
+    function deleteFood(i) {
+        if(confirm("Obriši?")) {
+            foods.splice(i, 1);
+            localStorage.setItem('monika_foods', JSON.stringify(foods));
+            render();
+        }
+    }
+
+    function clearHistory() { history = []; localStorage.removeItem('monika_history'); renderHistory(); }
+
     render();
+    renderHistory();
 </script>
+
 </body>
 </html>
