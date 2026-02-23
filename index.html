@@ -59,9 +59,61 @@
         <input type="number" id="newGrams" placeholder="grama">
         <button class="btn-add" onclick="addNewFood()">SPREMI</button>
     </div>
+    
+    <div id="history-section" style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 15px;">
+    <h3 style="color: #2c3e50;">📜 Povijest kuhanja</h3>
+    <div id="history-list" style="max-height: 200px; overflow-y: auto; font-size: 14px;"></div>
+    <button onclick="clearHistory()" style="margin-top: 10px; background: none; color: #e74c3c; font-size: 12px; border: 1px solid #e74c3c; padding: 5px 10px;">Obriši povijest</button>
+    </div>
+    
 </div>
 
 <script>
+    // Na početku skripte, dohvati povijest iz memorije
+let history = JSON.parse(localStorage.getItem('kuhinja_history')) || [];
+
+// Funkcija za dodavanje u povijest (pozvat ćemo je kad tajmer dođe na 0)
+function addToHistory(foodName, grams) {
+    const now = new Date();
+    const dateStr = now.toLocaleDateString('hr-HR');
+    const timeStr = now.toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
+    
+    const entry = {
+        text: `${dateStr} u ${timeStr} - ${foodName} (${grams}g)`,
+        id: Date.now()
+    };
+    
+    history.unshift(entry); // Dodaj na početak liste
+    if (history.length > 20) history.pop(); // Čuvaj zadnjih 20 zapisa
+    
+    localStorage.setItem('kuhinja_history', JSON.stringify(history));
+    renderHistory();
+}
+
+function renderHistory() {
+    const histList = document.getElementById('history-list');
+    histList.innerHTML = history.map(h => `
+        <div style="padding: 8px 0; border-bottom: 1px solid #f0f0f0; color: #555;">
+            ${h.text}
+        </div>
+    `).join('');
+}
+
+function clearHistory() {
+    if(confirm("Obrisati svu povijest?")) {
+        history = [];
+        localStorage.removeItem('kuhinja_history');
+        renderHistory();
+    }
+}
+
+// VAŽNO: Ažuriraj svoju postojeću runTimer funkciju unutar setInterval-a:
+// Tamo gdje piše: if (remaining === 0) { ... }
+// Dodaj ovu liniju: 
+// addToHistory(foods[i].name, document.querySelector(`#res-${i}`).previousElementSibling.previousElementSibling.value);
+    
+
+    
     const defaultFoods = [
         { name: "Riža", time: 25, water: 330, grams: 40 },
         { name: "Griz", time: 4, water: 300, grams: 40 },
@@ -147,6 +199,7 @@
                     if (Notification.permission === "granted") new Notification("Gotovo: " + foods[i].name);
                     if (navigator.vibrate) navigator.vibrate([500, 200, 500]);
                 }
+                addToHistory(foods[i].name, document.querySelector(`#res-${i}`).previousElementSibling.previousElementSibling.value);
                 startAlarm();
             } else if(disp) {
                 let m = Math.floor(remaining / 60);
