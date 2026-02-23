@@ -5,75 +5,83 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Monikina Kuhinja</title>
     
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Kuhinja">
-    
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1041/1041337.png">
-    <link rel="manifest" href='data:application/manifest+json,{"name":"Kuhinja","short_name":"Kuhinja","display":"standalone","start_url":".","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1041/1041337.png","sizes":"512x512","type":"image/png"}]}'>
+    <link rel="manifest" href='data:application/manifest+json,{"name":"Kuhinja","display":"standalone","orientation":"portrait","icons":[{"src":"https://cdn-icons-png.flaticon.com/512/1041/1041337.png","sizes":"512x512","type":"image/png"}]}'>
 
     <style>
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; display: flex; justify-content: center; padding: 15px; overscroll-behavior-y: contain; }
-        .app-card { background: white; padding: 20px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
-        header { text-align: center; margin-bottom: 20px; border-bottom: 1px solid #eee; padding-bottom: 15px; position: relative; }
+        
+        /* CSS LOCK: Ako se ekran okrene, sadržaj ostaje u portretnom obliku */
+        body { 
+            font-family: -apple-system, sans-serif; 
+            background: #f0f2f5; 
+            margin: 0; 
+            padding: 10px; 
+            display: flex; 
+            justify-content: center; 
+            overflow-x: hidden;
+        }
+
+        .app-card { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 20px; 
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+            width: 100%; 
+            max-width: 400px; /* Ovo drži aplikaciju uskom čak i vodoravno */
+            min-height: 90vh;
+        }
+
+        header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         h1 { margin: 5px 0; color: #2c3e50; font-size: 22px; }
-        .share-btn { position: absolute; top: 0; right: 0; background: #f8f9fa; border: 1px solid #ddd; padding: 8px; border-radius: 50%; cursor: pointer; }
-        .notif-banner { background: #fff3cd; color: #856404; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; text-align: center; display: none; }
-        .food-item { background: #fff; border: 1px solid #eee; border-left: 6px solid #e67e22; padding: 15px; border-radius: 15px; margin-bottom: 15px; position: relative; }
-        .delete-btn { position: absolute; top: 12px; right: 12px; background: none; border: none; font-size: 18px; color: #ddd; cursor: pointer; }
-        .food-header { font-weight: bold; font-size: 19px; margin-bottom: 12px; color: #2c3e50; }
-        .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
-        input[type="number"] { width: 80px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; font-size: 17px; }
-        .ml-result { color: #2980b9; font-weight: 800; font-size: 17px; }
+
+        .food-item { background: #fff; border: 1px solid #eee; border-left: 6px solid #e67e22; padding: 12px; border-radius: 15px; margin-bottom: 12px; position: relative; }
+        .delete-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; color: #ddd; cursor: pointer; }
+        .food-header { font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #2c3e50; }
+
+        .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
+        input[type="number"] { width: 75px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 17px; }
+        .ml-result { color: #2980b9; font-weight: 800; font-size: 17px; white-space: nowrap; }
+
         .timer-row { display: flex; justify-content: space-between; align-items: center; }
-        .time-display { font-size: 28px; font-weight: bold; font-family: monospace; color: #2c3e50; }
+        .time-display { font-size: 26px; font-weight: bold; font-family: monospace; color: #2c3e50; }
+
         button { cursor: pointer; border: none; border-radius: 10px; font-weight: bold; transition: 0.2s; }
-        .btn-cook { background: #3498db; color: white; padding: 12px 24px; }
-        .btn-stop { background: #e74c3c; color: white; padding: 12px 24px; }
-        .add-section { margin-top: 30px; padding: 20px; border-radius: 15px; background: #fdfdfd; border: 2px dashed #eee; }
-        .add-section input { width: 100%; margin-bottom: 10px; padding: 12px; border: 1px solid #ddd; border-radius: 10px; }
+        .btn-cook { background: #3498db; color: white; padding: 10px 20px; }
+        .btn-stop { background: #e74c3c; color: white; padding: 10px 20px; }
+
+        .add-section { margin-top: 25px; padding: 15px; border-radius: 15px; background: #fdfdfd; border: 2px dashed #eee; }
+        .add-section input { width: 100%; margin-bottom: 10px; padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; }
         .btn-add { width: 100%; padding: 15px; background: #27ae60; color: white; font-size: 16px; }
+
+        #history-section { margin-top: 25px; border-top: 2px solid #eee; padding-top: 15px; }
+        #history-list { max-height: 180px; overflow-y: auto; font-size: 13px; background: #fafafa; padding: 5px; border-radius: 10px; }
+        .history-item { padding: 8px; border-bottom: 1px solid #eee; color: #555; }
+
         @keyframes blink { 50% { opacity: 0.3; } }
         .finished { color: #e74c3c !important; animation: blink 0.8s infinite; }
-        #history-list { max-height: 200px; overflow-y: auto; font-size: 13px; margin-top: 10px; border-radius: 10px; background: #fafafa; padding: 5px; }
-        .history-item { padding: 8px; border-bottom: 1px solid #eee; color: #555; display: flex; justify-content: space-between; }
     </style>
 </head>
 <body>
 
 <div class="app-card">
-    <header>
-        <button class="share-btn" onclick="shareApp()">🔗</button>
-        <h1>🍳 Monikina Kuhinja</h1>
-    </header>
-    
-    <div id="notif-request" class="notif-banner">
-        🔔 Omogući obavijesti za alarm.<br>
-        <button onclick="requestNotif()" style="background:#856404; color:white; padding:6px 12px; margin-top:8px; border-radius:5px;">OMOGUĆI</button>
-    </div>
-
+    <header><h1>🍳 Monikina Kuhinja</h1></header>
     <div id="food-list"></div>
-
     <div class="add-section">
-        <h3 style="margin-top:0">➕ Dodaj namirnicu</h3>
+        <h4 style="margin:0 0 10px 0">➕ Dodaj namirnicu</h4>
         <input type="text" id="newName" placeholder="Naziv">
         <input type="number" id="newTime" placeholder="Minuta">
         <input type="number" id="newWater" placeholder="ml vode">
         <input type="number" id="newGrams" placeholder="grama">
         <button class="btn-add" onclick="addNewFood()">SPREMI</button>
     </div>
-    
-    <div id="history-section" style="margin-top: 30px; border-top: 2px solid #eee; padding-top: 15px;">
-        <h3 style="color: #2c3e50; margin-bottom: 5px;">📜 Povijest kuhanja</h3>
+    <div id="history-section">
+        <h4 style="margin:0 0 10px 0">📜 Povijest kuhanja</h4>
         <div id="history-list"></div>
-        <button onclick="clearHistory()" style="margin-top: 15px; background: none; color: #e74c3c; font-size: 12px; border: 1px solid #e74c3c; padding: 8px; width: 100%;">Obriši svu povijest</button>
+        <button onclick="clearHistory()" style="margin-top: 10px; background: none; color: #e74c3c; font-size: 12px; border: 1px solid #e74c3c; padding: 5px; width: 100%;">Obriši povijest</button>
     </div>
 </div>
 
 <script>
-    // --- PODACI I MEMORIJA ---
     let history = JSON.parse(localStorage.getItem('kuhinja_history')) || [];
     const defaultFoods = [
         { name: "Riža (Carnaroli)", time: 25, water: 280, grams: 35 },
@@ -81,12 +89,107 @@
         { name: "Palenta", time: 10, water: 300, grams: 40 }
     ];
     let foods = JSON.parse(localStorage.getItem('kuhinja_final')) || defaultFoods;
-    
     let activeIntervals = {};
     let alarmInterval = null;
     let audioCtx = null;
 
-    // --- AUDIO I NOTIFIKACIJE ---
+    function render() {
+        const list = document.getElementById('food-list');
+        list.innerHTML = '';
+        foods.forEach((f, i) => {
+            const initialWater = f.name.includes("Riža") ? Math.round((f.grams * 2.5) + 192) : f.water;
+            list.innerHTML += `
+                <div class="food-item">
+                    <button class="delete-btn" onclick="deleteFood(${i})">🗑️</button>
+                    <div class="food-header">${f.name}</div>
+                    <div class="calc-row">
+                        <input type="number" id="input-${i}" value="${f.grams}" oninput="updateWater(${i}, this.value)">
+                        <span>g ➡️</span>
+                        <span class="ml-result" id="res-${i}">${initialWater} ml</span>
+                    </div>
+                    <div class="timer-row">
+                        <div class="time-display" id="disp-${i}">${f.time}:00</div>
+                        <button class="btn-cook" id="btn-${i}" onclick="toggleTimer(${i})">KUHAJ</button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function updateWater(index, val) {
+        const f = foods[index];
+        let res = f.name.includes("Riža") ? (val > 0 ? Math.round((val * 2.5) + 192) : 0) : (val > 0 ? Math.round((val / f.grams) * f.water) : 0);
+        document.getElementById(`res-${index}`).innerText = res + " ml";
+    }
+
+    function toggleTimer(i) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (activeIntervals[i]) { 
+            clearInterval(activeIntervals[i]); 
+            delete activeIntervals[i];
+            render(); 
+        } else {
+            let seconds = foods[i].time * 60;
+            let historySaved = false;
+            document.getElementById(`btn-${i}`).innerText = "STOP";
+            document.getElementById(`btn-${i}`).classList.add('btn-stop');
+            activeIntervals[i] = setInterval(() => {
+                seconds--;
+                if (seconds <= 0) {
+                    const d = document.getElementById(`disp-${i}`);
+                    if(d) { d.innerText = "GOTOVO!"; d.classList.add('finished'); }
+                    if (!historySaved) {
+                        saveToHistory(foods[i].name, document.getElementById(`input-${i}`).value, document.getElementById(`res-${i}`).innerText);
+                        historySaved = true;
+                    }
+                    startAlarm();
+                } else {
+                    let min = Math.floor(seconds / 60); let sec = seconds % 60;
+                    if(document.getElementById(`disp-${i}`)) document.getElementById(`disp-${i}`).innerText = `${min}:${sec < 10 ? '0' : ''}${sec}`;
+                }
+            }, 1000);
+        }
+    }
+
+    function saveToHistory(name, g, ml) {
+        const now = new Date();
+        const entry = `${now.toLocaleDateString('hr')} ${now.getHours()}:${(now.getMinutes()<10?'0':'')+now.getMinutes()} - ${name}: ${g}g / ${ml}`;
+        history.unshift(entry); if(history.length > 15) history.pop();
+        localStorage.setItem('kuhinja_history', JSON.stringify(history));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        document.getElementById('history-list').innerHTML = history.length > 0 ? history.map(h => `<div class="history-item">${h}</div>`).join('') : '<div style="padding:10px; color:#999; text-align:center;">Nema zapisa.</div>';
+    }
+
+    function startAlarm() {
+        if(alarmInterval || !audioCtx) return;
+        alarmInterval = setInterval(() => {
+            const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+            osc.type = 'square'; osc.frequency.value = 880;
+            g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+            g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.4);
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.start(); osc.stop(audioCtx.currentTime + 0.5);
+        }, 1000);
+    }
+
+    function addNewFood() {
+        const n = document.getElementById('newName').value, t = document.getElementById('newTime').value, w = document.getElementById('newWater').value, g = document.getElementById('newGrams').value;
+        if(n && t && w && g) {
+            foods.push({ name: n, time: parseInt(t), water: parseInt(w), grams: parseInt(g) });
+            localStorage.setItem('kuhinja_final', JSON.stringify(foods)); render();
+            document.getElementById('newName').value = '';
+        }
+    }
+
+    function deleteFood(i) { if(confirm("Obriši?")) { foods.splice(i, 1); localStorage.setItem('kuhinja_final', JSON.stringify(foods)); render(); } }
+    function clearHistory() { if(confirm("Obriši povijest?")) { history = []; localStorage.removeItem('kuhinja_history'); renderHistory(); } }
+
+    render(); renderHistory();
+</script>
+</body>
+</html>
     function initAudio() {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
