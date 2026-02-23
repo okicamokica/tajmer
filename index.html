@@ -179,12 +179,19 @@
         render();
     }
 
-    function updateWater(index, val) {
-        const f = foods[index];
+function updateWater(index, val) {
+    const f = foods[index];
+    if (f.name.includes("Riža")) {
+        // 2.5ml po gramu + fiksno isparavanje koje smo izračunali za tvoj lonac (~192ml)
+        const res = Math.round((val * 2.5) + 192);
+        document.getElementById(`res-${index}`).innerText = res + " ml";
+    } else {
+        // Za ostale namirnice ostavi staro
         const res = val > 0 ? Math.round((val / f.grams) * f.water) : 0;
         document.getElementById(`res-${index}`).innerText = res + " ml";
     }
-
+}
+    
     function deleteFood(index) {
         if(confirm(`Obriši ${foods[index].name}?`)) {
             stopTimer(index);
