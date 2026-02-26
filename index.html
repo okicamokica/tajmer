@@ -6,55 +6,33 @@
     <title>Monikina Kuhinja</title>
     
     <style>
-        /* OSNOVNI STIL - SPRJEČAVA RAZVLAČENJE */
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { 
-            font-family: -apple-system, sans-serif; 
-            background: #f0f2f5; 
-            margin: 0; 
-            padding: 10px; 
-            display: flex; 
-            justify-content: center; 
-        }
-
-        .app-card { 
-            background: white; 
-            padding: 15px; 
-            border-radius: 20px; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            width: 100%; 
-            max-width: 400px; /* Drži aplikaciju uskom */
-        }
-
+        body { font-family: -apple-system, sans-serif; background: #f0f2f5; margin: 0; padding: 10px; display: flex; justify-content: center; }
+        .app-card { background: white; padding: 15px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
         header { text-align: center; margin-bottom: 15px; border-bottom: 1px solid #eee; padding-bottom: 10px; }
         h1 { margin: 5px 0; color: #2c3e50; font-size: 20px; }
 
-        /* KARTICE NAMIRNICA */
-        .food-item { 
-            background: #fff; 
-            border: 1px solid #eee; 
-            border-left: 6px solid #e67e22; 
-            padding: 12px; 
-            border-radius: 15px; 
-            margin-bottom: 12px; 
-            position: relative; 
-        }
+        .food-item { background: #fff; border: 1px solid #eee; border-left: 6px solid #e67e22; padding: 12px; border-radius: 15px; margin-bottom: 12px; position: relative; transition: 0.3s; }
+        .active-cooking { border-left-color: #3498db; background: #f7fbff; }
+        
         .delete-btn { position: absolute; top: 10px; right: 10px; background: none; border: none; font-size: 18px; color: #ddd; cursor: pointer; }
         .food-header { font-weight: bold; font-size: 18px; margin-bottom: 10px; color: #2c3e50; }
 
-        /* KALKULATOR DIO */
         .calc-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; background: #f8f9fa; padding: 10px; border-radius: 10px; }
         input[type="number"] { width: 70px; padding: 8px; border: 1px solid #ddd; border-radius: 8px; font-size: 16px; }
         .ml-result { color: #2980b9; font-weight: 800; font-size: 16px; }
 
-        /* TAJMER DIO */
+        /* PROGRESS BAR STIL */
+        .progress-container { width: 100%; height: 8px; background: #eee; border-radius: 4px; margin: 10px 0; overflow: hidden; display: none; }
+        .progress-bar { height: 100%; background: #e67e22; width: 0%; transition: width 0.5s linear; }
+        .active-cooking .progress-container { display: block; }
+
         .timer-row { display: flex; justify-content: space-between; align-items: center; }
         .time-display { font-size: 24px; font-weight: bold; font-family: monospace; color: #2c3e50; }
         button { cursor: pointer; border: none; border-radius: 10px; font-weight: bold; transition: 0.2s; }
         .btn-cook { background: #3498db; color: white; padding: 10px 18px; }
         .btn-stop { background: #e74c3c; color: white; padding: 10px 18px; }
 
-        /* POVIJEST I DODAVANJE */
         .add-section { margin-top: 20px; padding: 15px; border-radius: 15px; background: #fafafa; border: 1px dashed #ccc; }
         .add-section input { width: 100%; margin-bottom: 8px; padding: 10px; border: 1px solid #ddd; border-radius: 8px; }
         .btn-add { width: 100%; padding: 12px; background: #27ae60; color: white; }
@@ -90,7 +68,6 @@
 </div>
 
 <script>
-    // --- PODACI ---
     let history = JSON.parse(localStorage.getItem('monika_history')) || [];
     const defaultFoods = [
         { name: "Riža", time: 25, water: 280, grams: 35 },
@@ -98,19 +75,18 @@
         { name: "Palenta", time: 10, water: 300, grams: 40 }
     ];
     let foods = JSON.parse(localStorage.getItem('monika_foods')) || defaultFoods;
-    let activeIntervals = {};
+    let activeTimers = {};
     let audioCtx = null;
 
-    // --- FUNKCIJE ---
     function render() {
         const list = document.getElementById('food-list');
         list.innerHTML = '';
         foods.forEach((f, i) => {
-            // Pametna formula za rižu ostaje: (grami * 2.5) + 192
             const startMl = f.name.includes("Riža") ? Math.round((f.grams * 2.5) + 192) : f.water;
+            const isActive = activeTimers[i] ? 'active-cooking' : '';
             
             list.innerHTML += `
-                <div class="food-item">
+                <div class="food-item ${isActive}" id="card-${i}">
                     <button class="delete-btn" onclick="deleteFood(${i})">🗑️</button>
                     <div class="food-header">${f.name}</div>
                     <div class="calc-row">
@@ -118,9 +94,14 @@
                         <span>g ➡️</span>
                         <span class="ml-result" id="res-${i}">${startMl} ml</span>
                     </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="prog-${i}"></div>
+                    </div>
                     <div class="timer-row">
-                        <div class="time-display" id="disp-${i}">${f.time}:00</div>
-                        <button class="btn-cook" id="btn-${i}" onclick="toggleTimer(${i})">KUHAJ</button>
+                        <div class="time-display" id="disp-${i}">${activeTimers[i] ? '...' : f.time + ':00'}</div>
+                        <button class="${activeTimers[i] ? 'btn-stop' : 'btn-cook'}" id="btn-${i}" onclick="toggleTimer(${i})">
+                            ${activeTimers[i] ? 'STOP' : 'KUHAJ'}
+                        </button>
                     </div>
                 </div>`;
         });
@@ -128,44 +109,83 @@
 
     function updateWater(i, val) {
         const f = foods[i];
+        const g = parseFloat(val) || 0;
         let res = f.name.includes("Riža") 
-            ? (val > 0 ? Math.round((val * 2.5) + 192) : 0)
-            : (val > 0 ? Math.round((val / f.grams) * f.water) : 0);
+            ? (g > 0 ? Math.round((g * 2.5) + 192) : 0)
+            : (g > 0 ? Math.round((g / f.grams) * f.water) : 0);
         document.getElementById(`res-${i}`).innerText = res + " ml";
     }
 
     function toggleTimer(i) {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const btn = document.getElementById(`btn-${i}`);
-        
-        if (activeIntervals[i]) {
-            clearInterval(activeIntervals[i]);
-            delete activeIntervals[i];
+
+        if (activeTimers[i]) {
+            clearInterval(activeTimers[i].interval);
+            if(activeTimers[i].osc) try { activeTimers[i].osc.stop(); } catch(e) {}
+            delete activeTimers[i];
             render();
         } else {
-            let seconds = foods[i].time * 60;
-            let saved = false;
-            btn.innerText = "STOP";
-            btn.classList.add('btn-stop');
+            const durationMs = foods[i].time * 60 * 1000;
+            const startTime = Date.now();
+            const endTime = startTime + durationMs;
+            
+            document.getElementById(`btn-${i}`).innerText = "STOP";
+            document.getElementById(`btn-${i}`).className = "btn-stop";
+            document.getElementById(`card-${i}`).classList.add('active-cooking');
 
-            activeIntervals[i] = setInterval(() => {
-                seconds--;
-                if (seconds <= 0) {
-                    const d = document.getElementById(`disp-${i}`);
-                    d.innerText = "GOTOVO!";
-                    d.classList.add('finished');
-                    if (!saved) {
-                        saveToHistory(foods[i].name, document.getElementById(`in-${i}`).value, document.getElementById(`res-${i}`).innerText);
-                        saved = true;
-                        playAlarm();
-                    }
-                } else {
-                    let m = Math.floor(seconds / 60);
-                    let s = seconds % 60;
-                    document.getElementById(`disp-${i}`).innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
-                }
-            }, 1000);
+            activeTimers[i] = {
+                startTime: startTime,
+                endTime: endTime,
+                durationMs: durationMs,
+                interval: setInterval(() => updateUI(i), 500),
+                isFinished: false
+            };
         }
+    }
+
+    function updateUI(i) {
+        const timer = activeTimers[i];
+        if (!timer) return;
+
+        const now = Date.now();
+        const remaining = Math.max(0, Math.floor((timer.endTime - now) / 1000));
+        const elapsed = now - timer.startTime;
+        
+        // Izračun postotka za progress bar
+        const percent = Math.min(100, (elapsed / timer.durationMs) * 100);
+        const bar = document.getElementById(`prog-${i}`);
+        if(bar) bar.style.width = percent + "%";
+        
+        const display = document.getElementById(`disp-${i}`);
+        if (remaining <= 0) {
+            if (!timer.isFinished) {
+                timer.isFinished = true;
+                display.innerText = "GOTOVO!";
+                display.classList.add('finished');
+                saveToHistory(foods[i].name, document.getElementById(`in-${i}`).value, document.getElementById(`res-${i}`).innerText);
+                playAlarm(i);
+            }
+        } else {
+            const m = Math.floor(remaining / 60);
+            const s = remaining % 60;
+            display.innerText = `${m}:${s < 10 ? '0' : ''}${s}`;
+        }
+    }
+
+    function playAlarm(i) {
+        if (!audioCtx) return;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(880, audioCtx.currentTime);
+        gain.gain.setValueAtTime(0, audioCtx.currentTime);
+        for(let t=0; t<60; t+=0.5) {
+            gain.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + t + 0.1);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + t + 0.4);
+        }
+        osc.connect(gain); gain.connect(audioCtx.destination);
+        osc.start();
+        activeTimers[i].osc = osc;
     }
 
     function saveToHistory(name, g, ml) {
@@ -181,22 +201,8 @@
         document.getElementById('history-list').innerHTML = history.map(h => `<div class="history-item">${h}</div>`).join('');
     }
 
-    function playAlarm() {
-        if(!audioCtx) return;
-        const osc = audioCtx.createOscillator();
-        const g = audioCtx.createGain();
-        osc.type = 'square'; osc.frequency.value = 880;
-        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
-        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 1);
-        osc.connect(g); g.connect(audioCtx.destination);
-        osc.start(); osc.stop(audioCtx.currentTime + 1);
-    }
-
     function addNewFood() {
-        const n = document.getElementById('newName').value;
-        const t = document.getElementById('newTime').value;
-        const w = document.getElementById('newWater').value;
-        const g = document.getElementById('newGrams').value;
+        const n = document.getElementById('newName').value, t = document.getElementById('newTime').value, w = document.getElementById('newWater').value, g = document.getElementById('newGrams').value;
         if(n && t && w && g) {
             foods.push({ name: n, time: parseInt(t), water: parseInt(w), grams: parseInt(g) });
             localStorage.setItem('monika_foods', JSON.stringify(foods));
@@ -207,6 +213,7 @@
 
     function deleteFood(i) {
         if(confirm("Obriši?")) {
+            if(activeTimers[i]) clearInterval(activeTimers[i].interval);
             foods.splice(i, 1);
             localStorage.setItem('monika_foods', JSON.stringify(foods));
             render();
