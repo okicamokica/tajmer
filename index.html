@@ -257,6 +257,24 @@ function sendNotification(title, message) {
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js');
 }
+    // Slušaj poruke iz Service Workera (za gumb iz obavijesti)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('message', event => {
+        if (event.data.type === 'STOP_ALL_AUDIO') {
+            // Prolazimo kroz sve aktivne tajmere i gasimo njihove oscilatore
+            Object.keys(activeTimers).forEach(i => {
+                if (activeTimers[i] && activeTimers[i].osc) {
+                    try { 
+                        activeTimers[i].osc.stop(); 
+                        delete activeTimers[i].osc;
+                    } catch(e) {}
+                    // Opcionalno: resetiraj tajmer vizualno
+                    toggleTimer(i); 
+                }
+            });
+        }
+    });
+}
     
 </script>
 
