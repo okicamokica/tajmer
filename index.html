@@ -73,6 +73,29 @@
 </div>
 
 <script>
+    // Traženje dozvole za obavijesti čim se aplikacija učita
+function requestNotificationPermission() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                console.log('Obavijesti dozvoljene!');
+            }
+        });
+    }
+}
+requestNotificationPermission();
+
+// Funkcija koja šalje poruku Service Workeru da prikaže obavijest
+function sendNotification(title, message) {
+    if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+        navigator.serviceWorker.controller.postMessage({
+            type: 'SHOW_NOTIFICATION',
+            title: title,
+            body: message
+        });
+    }
+}
+    
     let history = JSON.parse(localStorage.getItem('monika_history')) || [];
     const defaultFoods = [
         { name: "Riža", time: 25, water: 280, grams: 35 },
@@ -167,6 +190,7 @@
                 timer.isFinished = true;
                 display.innerText = "GOTOVO!";
                 display.classList.add('finished');
+                sendNotification("🍳 Monikina Kuhinja", `${foods[i].name} je gotova!`);
                 saveToHistory(foods[i].name, document.getElementById(`in-${i}`).value, document.getElementById(`res-${i}`).innerText);
                 playAlarm(i);
             }
